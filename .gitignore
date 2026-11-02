@@ -1,3 +1,5 @@
 .venv/
 *.csv
 datas/*.csv
+*.idx3-ubyte
+*.idx1-ubyte
