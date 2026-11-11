@@ -6,10 +6,12 @@
 		"dockerfile": "Dockerfile"
 	},
 	
+  /*
 // Monter le socket X11 hôte dans le conteneur
   "mounts": [
     "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
   ],
+  */
   
   // Transmettre la variable d'affichage
   "containerEnv": {
@@ -19,6 +21,6 @@
   // Donner l'accès au serveur X11 (si nécessaire sur certains systèmes)
   "runArgs": [
     "--net=host"
-  ],
+  ]
 
 }
