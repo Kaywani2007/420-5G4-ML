@@ -34,6 +34,11 @@
 - `analyse_image/datas/*.csv` and `*.idx*` are gitignored and untracked, so they may be missing on a fresh clone.
 - `analyse_image/classification.ipynb` is expensive: CNN training up to 50 epochs and forces CPU.
 
+## GUI test app (`gui/`)
+- CustomTkinter window; use the isolated `gui/.venv`, not the Windows-only root `.venv`.
+- Setup: `cd gui && python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt`
+- Run: `.venv/bin/python app.py`; requires a graphical display (X11/desktop session).
+
 ## Conventions
 - C++ is built as C++17 with `-Wall -Wextra -Wpedantic`.
 - Keep user-facing C++ output and notebook labels in French.
