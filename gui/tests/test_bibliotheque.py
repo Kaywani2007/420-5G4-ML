@@ -150,6 +150,21 @@ class TestBibliotheque(unittest.TestCase):
             ["ISBN-B"],
         )
 
+    def test_recherche_insensible_aux_accents(self) -> None:
+        self.bibliotheque.ajouter_livre(
+            "Les Misérables",
+            "Victor Hugo",
+            "ISBN-ACCENT",
+        )
+
+        self.assertEqual(
+            [
+                livre.isbn
+                for livre in self.bibliotheque.rechercher_par_titre("miserables")
+            ],
+            ["ISBN-ACCENT"],
+        )
+
     def test_ajout_livre_et_refus_doublon(self) -> None:
         self.bibliotheque.ajouter_livre("Livre C", "Auteur C", "ISBN-C")
 

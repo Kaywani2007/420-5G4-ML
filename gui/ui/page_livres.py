@@ -11,6 +11,7 @@ from bibliotheque.service import Bibliotheque, ErreurBibliotheque
 
 from .composants import TableauDonnees
 from .dialogues import demander_ajout_livre
+from .tri_livres import trier_livres
 
 
 class PageLivres(ctk.CTkFrame):
@@ -25,7 +26,7 @@ class PageLivres(ctk.CTkFrame):
         self._apres_mutation = apres_mutation
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=1)
 
         self._construire_entete()
         self._construire_barre_outils()
@@ -84,7 +85,7 @@ class PageLivres(ctk.CTkFrame):
         self._recherche.grid(
             row=0, column=0, sticky="ew", padx=(12, 8), pady=12
         )
-        self._recherche.bind("<Return>", lambda _event: self.rafraichir())
+        self._recherche.bind("<Return>", lambda _event: self._rechercher())
 
         self._critere = ctk.CTkOptionMenu(
             barre,
@@ -108,7 +109,7 @@ class PageLivres(ctk.CTkFrame):
             text="Rechercher",
             width=110,
             height=36,
-            command=self.rafraichir,
+            command=self._rechercher,
         ).grid(row=0, column=3, padx=(0, 8), pady=12)
 
         ctk.CTkButton(
@@ -122,6 +123,16 @@ class PageLivres(ctk.CTkFrame):
         ).grid(row=0, column=4, padx=(0, 12), pady=12)
 
     def _construire_tableau(self) -> None:
+        self._message_vide = ctk.CTkLabel(
+            self,
+            text="",
+            font=ctk.CTkFont(size=13),
+            text_color=("gray35", "gray70"),
+            anchor="w",
+        )
+        self._message_vide.grid(row=2, column=0, sticky="ew", pady=(0, 8))
+        self._message_vide.grid_remove()
+
         self._tableau = TableauDonnees(
             self,
             colonnes=[
@@ -133,23 +144,33 @@ class PageLivres(ctk.CTkFrame):
             ],
             hauteur=14,
         )
-        self._tableau.grid(row=2, column=0, sticky="nsew")
+        self._tableau.grid(row=3, column=0, sticky="nsew")
 
-    def rafraichir(self) -> None:
+    def _rechercher(self) -> None:
+        self.rafraichir()
+
+    def _livres_filtres(self) -> list[Livre]:
         texte = self._recherche.get().strip()
         critere = self._critere.get()
-        filtre = self._filtre.get()
 
-        if critere == "Auteur":
-            livres = self.bibliotheque.rechercher_par_auteur(texte)
+        if texte:
+            if critere == "Auteur":
+                livres = self.bibliotheque.rechercher_par_auteur(texte)
+            else:
+                livres = self.bibliotheque.rechercher_par_titre(texte)
         else:
-            livres = self.bibliotheque.rechercher_par_titre(texte)
+            livres = list(self.bibliotheque.livres)
 
+        filtre = self._filtre.get()
         if filtre == "Disponibles":
             livres = [livre for livre in livres if livre.disponible]
         elif filtre == "Empruntés":
             livres = [livre for livre in livres if not livre.disponible]
 
+        return trier_livres(livres, critere)
+
+    def rafraichir(self) -> None:
+        livres = self._livres_filtres()
         self._tableau.remplir(
             livres,
             self._formater_livre,
@@ -157,10 +178,29 @@ class PageLivres(ctk.CTkFrame):
         )
 
         nombre = len(livres)
-        self._compteur.configure(
-            text=f"{nombre} livre{'s' if nombre > 1 else ''} affiché"
-            f"{'s' if nombre > 1 else ''}"
-        )
+        if nombre == 0:
+            self._afficher_message_vide()
+        else:
+            self._message_vide.grid_remove()
+
+        if nombre == 0:
+            texte_compteur = "0 livre affiché"
+        elif nombre == 1:
+            texte_compteur = "1 livre affiché"
+        else:
+            texte_compteur = f"{nombre} livres affichés"
+        self._compteur.configure(text=texte_compteur)
+
+    def _afficher_message_vide(self) -> None:
+        if self._recherche.get().strip():
+            message = "Aucun livre ne correspond à votre recherche."
+        elif self._filtre.get() != "Tous":
+            message = "Aucun livre ne correspond au filtre sélectionné."
+        else:
+            message = "Aucun livre dans la bibliothèque."
+
+        self._message_vide.configure(text=message)
+        self._message_vide.grid()
 
     def _formater_livre(self, livre: Livre) -> tuple[str, ...]:
         emprunteur = livre.id_emprunteur

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .modeles import Livre, Utilisateur
 from .stockage import ErreurStockage, Stockage
+from .texte import normaliser_texte
 
 
 class ErreurBibliotheque(Exception):
@@ -51,19 +52,23 @@ class Bibliotheque:
         )
 
     def rechercher_par_titre(self, texte: str) -> list[Livre]:
-        recherche = texte.strip().casefold()
+        recherche = normaliser_texte(texte)
         if not recherche:
             return list(self.livres)
         return [
-            livre for livre in self.livres if recherche in livre.titre.casefold()
+            livre
+            for livre in self.livres
+            if recherche in normaliser_texte(livre.titre)
         ]
 
     def rechercher_par_auteur(self, texte: str) -> list[Livre]:
-        recherche = texte.strip().casefold()
+        recherche = normaliser_texte(texte)
         if not recherche:
             return list(self.livres)
         return [
-            livre for livre in self.livres if recherche in livre.auteur.casefold()
+            livre
+            for livre in self.livres
+            if recherche in normaliser_texte(livre.auteur)
         ]
 
     @property
